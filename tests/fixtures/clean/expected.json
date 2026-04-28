@@ -1,0 +1,11 @@
+{
+  "verdict": "APPROVED",
+  "min_critical": 0,
+  "max_critical": 0,
+  "min_important": 0,
+  "max_important": 0,
+  "min_minor": 0,
+  "max_minor": 1,
+  "must_contain_substrings": [],
+  "must_not_contain_substrings": ["CHANGES REQUESTED", "CRITICAL"]
+}
