@@ -1,0 +1,4 @@
+.playwright-mcp/
+/tmp/
+*.log
+.DS_Store
