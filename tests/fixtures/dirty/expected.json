@@ -1,0 +1,20 @@
+{
+  "verdict": "CHANGES REQUESTED",
+  "min_critical": 1,
+  "max_critical": 2,
+  "min_important": 4,
+  "max_important": 8,
+  "min_minor": 2,
+  "max_minor": 8,
+  "must_contain_substrings": [
+    "CHANGES REQUESTED",
+    "Mass Assignment|mass assignment|`$request->all()`",
+    "raw SQL|SQL injection|DB::raw|DB::select",
+    "Project Rule Violation",
+    "Log::info",
+    "down()|down rollback",
+    "$guarded",
+    "N+1|eager load|with("
+  ],
+  "must_not_contain_substrings": ["APPROVED\n", "no issues found"]
+}
