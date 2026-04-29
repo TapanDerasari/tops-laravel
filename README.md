@@ -44,17 +44,42 @@ Each pillar skill is a one-rule-per-line markdown checklist. To add a rule, appe
 
 ## Install for the team
 
-This repo is its own Claude Code marketplace. Add it once, then install the plugin:
+This repo is its own Claude Code marketplace. Each team member needs to run
+two commands once to get started:
+
+### Step 1 — Register the marketplace
 
 ```text
 /plugin marketplace add TapanDerasari/tops-laravel
+```
+
+### Step 2 — Install the plugin
+
+```text
 /plugin install tops-laravel@tops-laravel
 ```
 
-Refresh the catalog later with `/plugin marketplace update tops-laravel`.
+That's it — the `/tops-laravel:review` command is now available in your Claude
+Code sessions.
 
-To auto-prompt teammates when they trust a project folder, add this to that
-project's `.claude/settings.json`:
+### Staying up to date
+
+When the author publishes new changes (rules, skills, or bug fixes) to this
+repo, they are **not** pushed to your machine automatically. You pull updates
+on your own schedule:
+
+```text
+/plugin marketplace update tops-laravel
+```
+
+Run this whenever you want the latest version. New rules and features take
+effect immediately in your current session.
+
+### Auto-enable for an entire project (recommended for teams)
+
+Instead of asking every teammate to install manually, you can wire the plugin
+into a specific Laravel project. Add the following to that project's
+`.claude/settings.json`:
 
 ```json
 {
@@ -66,3 +91,7 @@ project's `.claude/settings.json`:
   "enabledPlugins": { "tops-laravel@tops-laravel": true }
 }
 ```
+
+Once this is committed, anyone on the team who opens the project in Claude Code
+will have the plugin available automatically — no manual install steps needed.
+They still control when to pull newer versions via the update command above.
