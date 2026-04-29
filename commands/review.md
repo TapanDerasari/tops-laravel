@@ -1,5 +1,5 @@
 ---
-description: Review an open GitHub PR or GitLab MR. Usage: /tops-laravel:review <pr-number|mr-bang|url> [--dry-run]
+description: "Review an open GitHub PR or GitLab MR. Usage: /tops-laravel:review <pr-number|mr-bang|url> [--dry-run]"
 ---
 
 Run a Laravel-aware code review on the open PR/MR identified by `$ARGUMENTS`.
