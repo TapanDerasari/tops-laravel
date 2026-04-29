@@ -41,3 +41,14 @@ claude --plugin-dir /path/to/tops-laravel
 ## Extending the rules
 
 Each pillar skill is a one-rule-per-line markdown checklist. To add a rule, append a line to the relevant `skills/<pillar>/SKILL.md`. No agent code changes needed.
+
+## Install for the team
+
+Once published to the Tops org-internal Claude Code marketplace:
+
+```bash
+/plugin marketplace add <git-url-of-marketplace-repo>
+/plugin install tops-laravel
+```
+
+Update later with `/plugin update tops-laravel`.
