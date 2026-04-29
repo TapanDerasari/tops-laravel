@@ -44,11 +44,25 @@ Each pillar skill is a one-rule-per-line markdown checklist. To add a rule, appe
 
 ## Install for the team
 
-Once published to the Tops org-internal Claude Code marketplace:
+This repo is its own Claude Code marketplace. Add it once, then install the plugin:
 
-```bash
-/plugin marketplace add <git-url-of-marketplace-repo>
-/plugin install tops-laravel
+```text
+/plugin marketplace add TapanDerasari/tops-laravel
+/plugin install tops-laravel@tops-laravel
 ```
 
-Update later with `/plugin update tops-laravel`.
+Refresh the catalog later with `/plugin marketplace update tops-laravel`.
+
+To auto-prompt teammates when they trust a project folder, add this to that
+project's `.claude/settings.json`:
+
+```json
+{
+  "extraKnownMarketplaces": {
+    "tops-laravel": {
+      "source": { "source": "github", "repo": "TapanDerasari/tops-laravel" }
+    }
+  },
+  "enabledPlugins": { "tops-laravel@tops-laravel": true }
+}
+```

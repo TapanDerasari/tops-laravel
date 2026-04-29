@@ -1,0 +1,19 @@
+{
+  "name": "tops-laravel",
+  "owner": {
+    "name": "Tops Infosolutions",
+    "email": "tapan@topsinfosolutions.com"
+  },
+  "description": "Tops Infosolutions Claude Code plugins for Laravel projects",
+  "plugins": [
+    {
+      "name": "tops-laravel",
+      "source": "./",
+      "description": "Code review for PRs/MRs against Laravel best practices, Pint, Eloquent, security, performance, and project rules.",
+      "homepage": "https://github.com/TapanDerasari/tops-laravel",
+      "repository": "https://github.com/TapanDerasari/tops-laravel",
+      "category": "code-review",
+      "keywords": ["laravel", "php", "code-review", "pint", "eloquent"]
+    }
+  ]
+}
