@@ -15,9 +15,22 @@ for name in "${FIXTURES[@]}"; do
     echo "[$name] running reviewer..."
     out="$(claude --plugin-dir "$PLUGIN_DIR" -p "/tops-laravel:review fixture:$name" 2>&1)"
 
-    result_line="$(echo "$out" | grep '^__FIXTURE_RESULT__' | tail -1 | sed 's/^__FIXTURE_RESULT__ //')"
+    result_line="$(grep -oE '__FIXTURE_RESULT__ \{[^}]*\}' <<< "$out" | tail -1 | sed 's/^__FIXTURE_RESULT__ //' || true)"
     if [[ -z "$result_line" ]]; then
-        echo "[$name] FAIL — no __FIXTURE_RESULT__ line in output"
+        result_line="$(grep -oE '\{"verdict":"[^"]+","critical":[0-9]+,"important":[0-9]+,"minor":[0-9]+\}' <<< "$out" | tail -1 || true)"
+    fi
+    if [[ -z "$result_line" ]]; then
+        v_raw="$(grep -m1 -oE '\*\*Verdict:\*\* [^_]*' <<< "$out" | head -1 | sed -E 's/.*\*\*Verdict:\*\* //; s/\*+//g; s/[[:space:]]+$//' || true)"
+        counts_raw="$(grep -m1 -oE '\*\*Issues Found:\*\* [0-9]+ critical, [0-9]+ important, [0-9]+ minor' <<< "$out" || true)"
+        if [[ -n "$v_raw" && -n "$counts_raw" ]]; then
+            c_n="$(grep -oE '[0-9]+ critical' <<< "$counts_raw" | grep -oE '[0-9]+')"
+            i_n="$(grep -oE '[0-9]+ important' <<< "$counts_raw" | grep -oE '[0-9]+')"
+            m_n="$(grep -oE '[0-9]+ minor' <<< "$counts_raw" | grep -oE '[0-9]+')"
+            result_line="{\"verdict\":\"${v_raw}\",\"critical\":${c_n},\"important\":${i_n},\"minor\":${m_n}}"
+        fi
+    fi
+    if [[ -z "$result_line" ]]; then
+        echo "[$name] FAIL — could not extract result (no __FIXTURE_RESULT__ line, no bare JSON, no parseable Verdict+Issues Found lines)"
         echo "$out" | tail -40
         FAIL=1; continue
     fi

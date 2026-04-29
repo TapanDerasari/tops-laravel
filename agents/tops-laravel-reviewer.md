@@ -48,8 +48,32 @@ If the argument starts with `fixture:` (e.g. `fixture:clean` or `fixture:dirty`)
 - Treat the directory `tests/fixtures/<name>/` (relative to plugin root) as the project root for the rest of the review.
 - Treat every `.php` file under that directory as "changed".
 - Skip Phase H entirely (do not post). Always behave as if `--dry-run` is set.
-- After rendering the markdown comment to stdout, also print a one-line JSON summary on its own line:
-  `__FIXTURE_RESULT__ {"verdict":"...","critical":N,"important":N,"minor":N}`
+- After rendering the markdown comment to stdout, emit the machine-parseable result line as the **very last line of your output**. This is a strict contract with the test harness — it is not commentary, it is not Markdown, it is a sentinel.
+
+  **Format (exact):**
+  ```
+  __FIXTURE_RESULT__ {"verdict":"<VERDICT>","critical":<N>,"important":<N>,"minor":<N>}
+  ```
+
+  - The line MUST start at column 0 with the literal characters `__FIXTURE_RESULT__` (two underscores, the word `FIXTURE_RESULT`, two underscores).
+  - One ASCII space follows, then the raw JSON object.
+  - Nothing precedes or follows on that line — no backticks, no code-fence delimiters, no quotation marks, no bullet markers, no bold/italic markers, no terminal-summary preamble like `Terminal summary:`.
+  - The line must be terminated by a single newline.
+
+  **Correct (emit exactly this, with no surrounding characters):**
+  ```
+  __FIXTURE_RESULT__ {"verdict":"APPROVED","critical":0,"important":0,"minor":0}
+  ```
+
+  **WRONG — do not do any of these:**
+  - `` `__FIXTURE_RESULT__ {...}` `` (wrapped in backticks)
+  - `Terminal summary: __FIXTURE_RESULT__ {...}` (prefixed with prose)
+  - ` __FIXTURE_RESULT__ {...}` (leading whitespace)
+  - `__FIXTURE_RESULT__ \`{...}\`` (JSON itself wrapped in backticks)
+  - emitting only the JSON object without the `__FIXTURE_RESULT__` prefix
+  - omitting the line because it "feels redundant" with the rendered comment
+
+  The harness's grep is anchored to `^__FIXTURE_RESULT__`. Any deviation breaks the test. Treat this line like a function return value, not like UI text.
 
 This mode exists solely for the test harness; it is never used in real reviews.
 
