@@ -1,11 +1,11 @@
 {
   "verdict": "CHANGES REQUESTED",
   "min_critical": 1,
-  "max_critical": 2,
+  "max_critical": 3,
   "min_important": 4,
-  "max_important": 8,
+  "max_important": 12,
   "min_minor": 2,
-  "max_minor": 8,
+  "max_minor": 12,
   "must_contain_substrings": [
     "CHANGES REQUESTED",
     "Mass Assignment|mass assignment|`$request->all()`",
