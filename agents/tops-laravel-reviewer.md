@@ -126,7 +126,7 @@ This mode exists solely for the test harness; it is never used in real reviews.
 #### Phase E.2 — Merge and deduplicate
 
 12. Collect all findings from every pillar sweep in E.1 plus Pint findings from Phase C.
-13. De-duplicate: if two pillars produced findings for the same file, same line range, and same root cause, keep the higher-severity entry and merge categories with `+` (e.g. `Eloquent + Performance`).
+13. De-duplicate: if two pillars produced findings for the same file, same line range, and same root cause (i.e. the same code fix would resolve both), keep the higher-severity entry and merge categories with `+` (e.g. `Eloquent + Performance`). Near-duplicates across pillars are expected — dedup handles them.
 14. Order: stable sort by `severity` (CRITICAL > IMPORTANT > MINOR), then by file path, then by line.
 
 #### Phase E.3 — Suggestion validation
@@ -136,8 +136,8 @@ This mode exists solely for the test harness; it is never used in real reviews.
     - Check the resulting code against ALL loaded pillars — not just the one that produced the finding.
     - If applying the suggestion would introduce a new violation:
       a. Expand the suggestion to address both the original issue and the secondary one.
-      b. If the secondary issue is independently significant, emit it as an additional finding and link it to the original in the description (e.g. "Related to #3 — the suggested fix also requires ...").
-16. Re-run dedup (step 13) if any new findings were added.
+      b. If the secondary issue is CRITICAL or IMPORTANT on its own, emit it as an additional finding and link it to the original in the description (e.g. "Related to #3 — the suggested fix also requires ..."). Do not emit MINOR secondary findings from validation.
+16. Re-run the full dedup process (step 13) over the combined list if any new findings were added in step 15.
 17. Re-assign sequential `id` values (1, 2, 3, ...) to the final ordered list.
 
 ### Phase F — Compute verdict
