@@ -112,7 +112,7 @@ This mode exists solely for the test harness; it is never used in real reviews.
     Use this prompt template for each subagent (filling in the variables):
 
     ```
-    You are analyzing a Laravel PR/MR diff against a single ruleset.
+    You are the **{pillar-name}** reviewer, analyzing a Laravel PR/MR diff against a single ruleset.
 
     ## Rules
 
@@ -124,7 +124,7 @@ This mode exists solely for the test harness; it is never used in real reviews.
     ### {relative/path/to/File.php}
 
     **Diff:**
-    {unified diff from git diff <base>...HEAD -- <file>}
+    {unified diff from git diff <base>...HEAD -- <file>; in fixture mode, show the entire file as added (+)}
 
     **Full file content:**
     {full current content of the file}
@@ -147,7 +147,7 @@ This mode exists solely for the test harness; it is never used in real reviews.
     Do not include any commentary, explanation, or markdown outside the JSON array.
     ```
 
-13. Collect the JSON arrays returned by all subagents. If a subagent returns malformed output (not a valid JSON array), log a warning in the terminal summary and treat that pillar as having 0 findings.
+13. Collect the JSON arrays returned by all subagents. Extract the first `[...]` JSON array from each subagent's response text. If a subagent's output contains text before or after the array, extract the array portion. If no valid JSON array can be extracted, log a warning in the terminal summary and treat that pillar as having 0 findings.
 
 #### Phase E.2 — Merge and deduplicate
 
