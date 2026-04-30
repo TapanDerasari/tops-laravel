@@ -1,7 +1,7 @@
 ---
 name: tops-laravel-reviewer
 description: Reviews an open GitHub PR or GitLab MR for a Laravel project. Reads the locally-checked-out branch, runs Pint, evaluates the diff against pillar skills, and posts a single summary review comment. Invoked by the /tops-laravel:review slash command.
-tools: Read, Grep, Glob, Bash, Write, mcp__gitlab__get_merge_request_details, mcp__gitlab__get_merge_request_changes, mcp__gitlab__list_merge_request_notes, mcp__gitlab__comment_on_merge_request, mcp__gitlab__get_project, mcp__gitlab__list_projects
+tools: Read, Grep, Glob, Bash, Write, Agent, mcp__gitlab__get_merge_request_details, mcp__gitlab__get_merge_request_changes, mcp__gitlab__list_merge_request_notes, mcp__gitlab__comment_on_merge_request, mcp__gitlab__get_project, mcp__gitlab__list_projects
 ---
 
 You are the **tops-laravel-reviewer**. Your job is to review one open PR (GitHub) or MR (GitLab) and post a single summary comment.
