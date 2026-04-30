@@ -97,52 +97,78 @@ This mode exists solely for the test harness; it is never used in real reviews.
 
 ### Phase E — Analyze
 
-#### Phase E.1 — Per-pillar sweeps
+#### Phase E.1 — Per-pillar sweeps (parallel)
 
-11. Analyze the diff + full file content one pillar at a time. For each loaded pillar (excluding `laravel-pint`, which is handled by Phase C), sweep in this order:
-    1. `project-rules`
-    2. `laravel-security` (if loaded)
-    3. `laravel-eloquent` (if loaded)
-    4. `laravel-best-practices`
-    5. `laravel-performance` (if loaded)
+11. For each loaded pillar (excluding `laravel-pint`, which is handled by Phase C), construct a self-contained subagent prompt containing:
+    - The pillar's full SKILL.md content (read during Phase D).
+    - The diff + full file content for every changed file (collected during Phase B).
+    - The JSON finding schema (without `id` — assigned later in E.2).
+    - Instructions to return ONLY a raw JSON array of findings.
 
-    For each pillar sweep:
-    - Focus exclusively on that pillar's rules. Do not consider other pillars' rules during this sweep.
-    - Walk every rule in the pillar's checklist against the diff + full file content.
-    - Emit findings as JSON entries with this schema (collected internally, not shown to the user):
-      ```json
-      {
-        "id": 1,
-        "severity": "CRITICAL|IMPORTANT|MINOR",
-        "category": "free text, e.g. Data Integrity, Project Rule Violation, Pint Style",
-        "description": "1-3 sentence plain-English description, may quote code",
-        "file": "relative/path/to/File.php",
-        "line": "42" | "42-58" | null,
-        "suggestion": "1-2 sentence concrete fix; may include code"
-      }
-      ```
-    - After completing one pillar, move to the next with a clean slate — do not let findings from one pillar bias the next.
+12. Dispatch ALL pillar subagents in a single message so they run concurrently. Use this configuration for each:
+    - `model: "sonnet"`
+    - `description: "Pillar: <pillar-name>"`
+
+    Use this prompt template for each subagent (filling in the variables):
+
+    ```
+    You are analyzing a Laravel PR/MR diff against a single ruleset.
+
+    ## Rules
+
+    {full content of the pillar's SKILL.md}
+
+    ## Changed Files
+
+    {for each changed file:}
+    ### {relative/path/to/File.php}
+
+    **Diff:**
+    {unified diff from git diff <base>...HEAD -- <file>}
+
+    **Full file content:**
+    {full current content of the file}
+
+    {end for each}
+
+    ## Your Job
+
+    Walk every rule in the ruleset above against each changed file.
+    For each violation found, emit a JSON object with these fields:
+
+    - "severity": "CRITICAL", "IMPORTANT", or "MINOR"
+    - "category": free text (e.g. "Data Integrity", "Project Rule Violation")
+    - "description": 1-3 sentence plain-English description, may quote code
+    - "file": relative path to the file
+    - "line": "42" or "42-58" or null
+    - "suggestion": 1-2 sentence concrete fix, may include code
+
+    Return ONLY a JSON array of finding objects. If no violations, return [].
+    Do not include any commentary, explanation, or markdown outside the JSON array.
+    ```
+
+13. Collect the JSON arrays returned by all subagents. If a subagent returns malformed output (not a valid JSON array), log a warning in the terminal summary and treat that pillar as having 0 findings.
 
 #### Phase E.2 — Merge and deduplicate
 
-12. Collect all findings from every pillar sweep in E.1 plus Pint findings from Phase C.
-13. De-duplicate: if two pillars produced findings for the same file, same line range, and same root cause (i.e. the same code fix would resolve both), keep the higher-severity entry and merge categories with `+` (e.g. `Eloquent + Performance`). Near-duplicates across pillars are expected — dedup handles them.
-14. Order: stable sort by `severity` (CRITICAL > IMPORTANT > MINOR), then by file path, then by line.
+14. Collect all findings from every pillar sweep in E.1 plus Pint findings from Phase C.
+15. De-duplicate: if two pillars produced findings for the same file, same line range, and same root cause (i.e. the same code fix would resolve both), keep the higher-severity entry and merge categories with `+` (e.g. `Eloquent + Performance`). Near-duplicates across pillars are expected — dedup handles them.
+16. Order: stable sort by `severity` (CRITICAL > IMPORTANT > MINOR), then by file path, then by line.
 
 #### Phase E.3 — Suggestion validation
 
-15. For each CRITICAL or IMPORTANT finding that includes a suggestion:
+17. For each CRITICAL or IMPORTANT finding that includes a suggestion:
     - Mentally apply the suggested fix to the code in context of the full file.
     - Check the resulting code against ALL loaded pillars — not just the one that produced the finding.
     - If applying the suggestion would introduce a new violation:
       a. Expand the suggestion to address both the original issue and the secondary one.
       b. If the secondary issue is CRITICAL or IMPORTANT on its own, emit it as an additional finding and link it to the original in the description (e.g. "Related to #3 — the suggested fix also requires ..."). Do not emit MINOR secondary findings from validation.
-16. Re-run the full dedup process (step 13) over the combined list if any new findings were added in step 15.
-17. Re-assign sequential `id` values (1, 2, 3, ...) to the final ordered list.
+18. Re-run the full dedup process (step 15) over the combined list if any new findings were added in step 17.
+19. Re-assign sequential `id` values (1, 2, 3, ...) to the final ordered list.
 
 ### Phase F — Compute verdict
 
-18. Apply this rule:
+20. Apply this rule:
     - any `CRITICAL` → `CHANGES REQUESTED`
     - else any `IMPORTANT` → `CHANGES REQUESTED`
     - else only `MINOR` → `APPROVED WITH SUGGESTIONS`
@@ -150,7 +176,7 @@ This mode exists solely for the test harness; it is never used in real reviews.
 
 ### Phase G — Render markdown comment
 
-19. Render this exact template (filling in the variables):
+21. Render this exact template (filling in the variables):
 
 ````markdown
 ## Automated Peer Review
@@ -180,16 +206,16 @@ If 0 findings: omit the **Issues** table and the **Required Fixes Before Merge**
 
 ### Phase H — Post or dry-run
 
-20. Write the rendered markdown to `/tmp/tops-review-<host>-<n>.md`.
-21. If `--dry-run`: print the file contents to stdout, then print a one-line summary: `Dry-run complete. {n} findings. Verdict: {VERDICT}.`
-22. Otherwise post:
+22. Write the rendered markdown to `/tmp/tops-review-<host>-<n>.md`.
+23. If `--dry-run`: print the file contents to stdout, then print a one-line summary: `Dry-run complete. {n} findings. Verdict: {VERDICT}.`
+24. Otherwise post:
     - GitHub: `gh pr comment <n> --body-file /tmp/tops-review-github-<n>.md`
     - GitLab: `mcp__gitlab__comment_on_merge_request` with the rendered markdown as the body.
-23. If the post fails: keep the `/tmp/...md` file and tell the user to paste it manually.
+25. If the post fails: keep the `/tmp/...md` file and tell the user to paste it manually.
 
 ### Phase I — Terminal summary
 
-24. Print to the terminal: a link to the posted comment (if posted), the verdict, and finding counts. Example:
+26. Print to the terminal: a link to the posted comment (if posted), the verdict, and finding counts. Example:
     ```
     Posted: https://github.com/org/repo/pull/123#issuecomment-...
     Verdict: CHANGES REQUESTED
